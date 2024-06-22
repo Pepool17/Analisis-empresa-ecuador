@@ -3,44 +3,46 @@ import plotly.graph_objects as go
 from shinywidgets import output_widget, render_widget
 from pathlib import Path
 import pandas as pd
-from shiny.types import ImgData
 from src.functions import serie_tiempo_empresa, mapa_floresta, extraer_coordenada
 
 app_ui = ui.page_fluid(
     ui.include_css(
-        Path(__file__).parent / "styles.css"
-    ),
-    ui.panel_title("Análisis de Comentarios"),
-    ui.layout_column_wrap(
-        1,  # Ensure full-width column for the inputs
-        ui.input_selectize('categoria', 'Dataframe', ['Hoteles', 'Restaurantes', 'Bares']),
-        ui.input_selectize('nombre_empresa', 'Nombre', [])
-    ),
-    ui.layout_column_wrap(
-        1 / 2,  # Two columns for the output cards
-        ui.card(
-            ui.output_ui("mapa")
-        ),
-        ui.card(
-            output_widget("plot_series_tiempo")
-        )
+        Path(__file__).parent / "styles.css"  
+    ),    
+    ui.div(
+        ui.h2("Análisis de Comentarios".upper()).add_class("panel-title")
     ),
     ui.div(
-        ui.div(
-            ui.img(src="https://i.ibb.co/DDZwpbX/digital-mind-only-logo.png", 
-                   #https://i.ibb.co/wR2SQ18/digital-mind.png
-                style="width: 100px; height: auto; margin-right: 20px;"),
-            ui.div(
-                ui.h3("Digital Mind"),
-                ui.p("© 2024 Digital Mind. Todos los derechos reservados."),
-                style="display: inline-block; vertical-align: middle;"
-            ),
-            style="display: flex; align-items: center; justify-content: center;"
+        ui.layout_column_wrap(
+            1/2,  
+            ui.input_selectize('categoria', 'CATEGORIAS', ['Hoteles', 'Restaurantes', 'Bares']),
+            ui.input_selectize('nombre_empresa', 'NOMBRE', [])
         ),
-        style="text-align: center; padding: 20px; background-color: #f8f9fa;"
-    )   
-)
+        ui.layout_column_wrap(
+            1 / 2, 
+            ui.card(
+                ui.output_ui("mapa")
+            ),
+            ui.card(
+                output_widget("plot_series_tiempo")
+            )
+        ),
+        ui.div(
+            ui.div(
+                ui.img(src="https://i.ibb.co/DDZwpbX/digital-mind-only-logo.png",
+                    style="width: 100px; height: auto; margin-right: 20px;"),
+                ui.div(
+                    ui.h3("Digital Mind").add_style('color: #f5f5f5;'),
+                    ui.p("© 2024 Digital Mind. Todos los derechos reservados.").add_style('color: #f5f5f5;'),
+                ),
+                style="display: flex; align-items: center; justify-content: center;"
+            ),
+            style="text-align: center; padding: 20px; background-color: #373739;"
+        )
+    ).add_class("main-container"),
+)   
 
+# Server 
 def server(input, output, session):
     @reactive.Effect
     def _():
@@ -92,6 +94,5 @@ def server(input, output, session):
                 hovermode='x unified'
             )
             return fig
-
 
 app = App(app_ui, server)

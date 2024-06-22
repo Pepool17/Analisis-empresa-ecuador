@@ -102,12 +102,14 @@ def extraer_coordenada(df, nombre):
         if coincidencias:
             nombre = coincidencias[0]
         else:
-            raise ValueError(f"No se encontró ninguna coincidencia para '{nombre}'")
+            raise ValueError(f"")
+            #ValueError(f"No se encontró ninguna coincidencia para '{nombre}'")
 
     df_filtrado = df[df['Nombre'] == nombre]
     
     if df_filtrado.empty:
-        raise ValueError(f"No hay datos para '{nombre}'")
+        raise ValueError(f"")
+        #ValueError(f"No hay datos para '{nombre}'")
     
     latitud = df_filtrado['Latitud'].iloc[0]
     longitud = df_filtrado['Longitud'].iloc[0]

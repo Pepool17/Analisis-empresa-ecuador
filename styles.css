@@ -1,97 +1,89 @@
 body, html {
-  background-color: #ffffff !important; 
+  background-color: #373739 !important; 
+}
+
+.panel-title {
+  color: #f5f5f5;
+  text-align: center;
+  font-weight: bold;
+  font-family: 'Merriweather', serif;
+  font-size: 40px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 2px solid #ffffff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.selectize-dropdown-content {
+  color: #373739;
+}
+
+.selectize-input,
+.shiny-input-container > input[type="number"] {
+  background-color: #f5f5f5 !important;
+  font-weight: 500 !important;
+  font-family: 'Roboto', sans-serif;
+}
+
+.selectize-dropdown {
+  background-color: #f5f5f5 !important;
+  font-weight: normal !important;
+  font-family: 'Roboto', sans-serif;
+}
+
+.selectize-control.single .selectize-input:after {
+  border-color: #373739 transparent transparent transparent !important;
+}
+
+/* Estilo para la opción seleccionada en el dropdown */
+.selectize-dropdown .option.selected {
+  background-color: transparent !important;
+  color: #373739 !important;
+}
+
+/* Estilo para la opción seleccionada cuando el cursor pasa sobre ella */
+.selectize-dropdown .option.selected:hover {
+  background-color: #373739 !important;
+  color: white !important;
+}
+
+/* Estilo para cualquier opción cuando el cursor pasa sobre ella */
+.selectize-dropdown .option:hover {
+  background-color: #373739 !important;
+  color: white !important;
+}
+
+/* Estilo para la opción activa (la que está siendo enfocada con el teclado) */
+.selectize-dropdown .option.active {
+  background-color: #373739 !important;
+  color: white !important;
+}
+
+/* Estilo para las etiquetas de los inputs */
+.selectize-control label {
+  color: #373739;
+  font-weight: bold;
+}
+
+/* Cambiar el color de las etiquetas "CATEGORIAS" y "NOMBRE" */
+.selectize-control label,
+.shiny-input-container label {
+    color: #ffffff !important;
+    font-weight: bold;
 }
 
 .main-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.content-container {
-  flex-grow: 1;
-}
-
-
-.header {
-  display: flex;
-  align-items: center;
-  background-color: #ffffff;
-  padding: 20px;
-}
-
-.header-logo {
-  width: 80px;
-  height: 80px;
-  margin-right: 30px;
-}
-
-.header-title {
-  font-family: 'Raleway', sans-serif;
-  font-size: 32px;
-  color: #132b60;
-  font-weight: normal;
-}
-
-.header-logo-right {
   margin-left: auto;
-  width: 80px;
-  height: 80px;
+  margin-right: auto;
+  padding-left: 30px;
+  padding-right: 30px;
 }
 
-.sidebar {
-  background-color: #132b60 !important;
-  color: #f5f5f5 !important;
+.shiny-input-container {
+  margin-bottom: 15px;
 }
 
-.blue-text {
-  color: #132b60;
-  font-family: 'Roboto';
+.card {
+  margin-bottom: 20px;
 }
-
-.black-text {
-  color: #000104;
-  font-family: 'Roboto';
-  font-weight: 500;
-}
-
-.sidebar .selectize-input,
-.sidebar .shiny-input-container > input[type="number"] {
-  background-color: #f5f5f5 !important;
-  font-weight: 500 !important;
-  font-family: 'Roboto';
-}
-
-.sidebar .selectize-dropdown {
-  background-color: #f5f5f5 !important;
-  font-weight: normal !important;
-  font-family: 'Roboto';
-}
-
-.sidebar .selectize-dropdown .option.active {
-  background-color: #047cc4 !important;
-  color: white !important;
-}
-
-.sidebar .selectize-dropdown .option:hover,
-.sidebar .selectize-dropdown .option.selected:hover {
-  background-color: #047cc4 !important;
-  color: white !important;
-}
-
-.sidebar .selectize-control.single .selectize-input:after {
-  border-color: #132b60 transparent transparent transparent !important;
-}
-
-.sidebar .selectize-dropdown .option.selected {
-  background-color: transparent !important;
-  color: inherit !important;
-}
-
-.sidebar label {
-  color: #f5f5f5 !important;
-  font-weight: 500 !important;
-  font-family: 'Roboto';
-  font-size: 16px;
-}
-
