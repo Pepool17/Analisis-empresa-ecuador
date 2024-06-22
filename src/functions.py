@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import folium
+from folium.plugins import MiniMap
 
 def texto_a_fecha(texto):
     hoy = datetime.now()
@@ -77,5 +79,39 @@ def graficar_serie_tiempo(df, nombre_empresa):
         hovermode='x unified'
     )
     
-    # Mostrar el gráfico
-    fig.show()
+
+def mapa_floresta(coord = [-0.2086949, -78.4854354], nombre= 'Pollos Asados'):
+    popuptext = f'<b>{nombre}</b>'
+    floresta = folium.Map(location = coord, zoom_start=18)
+    folium.Marker(location= coord, popup= popuptext ).add_to(floresta)
+    folium.Circle(location= coord, color = 'purple', fill_color = 'red', radius = 10, weight = 4, fill_opacity = 0.5, tooltip = f'{nombre}').add_to(floresta)
+    #minimap = MiniMap()
+    #floresta.add_child(minimap)
+    return floresta
+
+def extraer_coordenada(df, nombre):
+    df = df.copy()
+    
+    df['Nombre'] = df['Nombre'].str.lower().str.strip()
+    nombre = nombre.lower().strip()
+    
+    if nombre not in df['Nombre'].values:
+        from difflib import get_close_matches
+        nombres = df['Nombre'].unique()
+        coincidencias = get_close_matches(nombre, nombres, n=1, cutoff=0.6)
+        if coincidencias:
+            nombre = coincidencias[0]
+        else:
+            raise ValueError(f"No se encontró ninguna coincidencia para '{nombre}'")
+
+    df_filtrado = df[df['Nombre'] == nombre]
+    
+    if df_filtrado.empty:
+        raise ValueError(f"No hay datos para '{nombre}'")
+    
+    latitud = df_filtrado['Latitud'].iloc[0]
+    longitud = df_filtrado['Longitud'].iloc[0]
+    
+    return [latitud, longitud]
+
+
