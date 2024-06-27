@@ -4,6 +4,18 @@ import plotly.express as px
 import plotly.graph_objects as go
 import folium
 import math
+import nltk
+from wordcloud import WordCloud
+from nltk.util import ngrams
+from collections import Counter
+import string
+import re
+from gensim.models import Phrases
+from gensim.models.phrases import Phraser
+from nltk.corpus import stopwords
+import mpld3
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 def texto_a_fecha(texto):
     hoy = datetime.now()
@@ -116,3 +128,48 @@ def mapa_floresta(df, nombre, total):
                       icon=folium.Icon(color=color)).add_to(mapa)
 
     return mapa
+
+# Funciones para los bigramas
+stop_words = stopwords.words('spanish')
+stop_words = stop_words + ['ademas', 'dijo', 'dijeron', 'comment', 'found', 'toda', 'veces', 'dieron', 'solo', 'tarde', 'noche']
+
+
+def clean_text(text):
+    if isinstance(text, float):
+        return ""
+    text = str(text).lower()
+    text = re.sub(r'\d+', '', text)
+    text = re.sub(r'[^\w\s]', '', text)
+    text = ' '.join([word for word in text.split() if word not in stop_words])
+    return text
+
+
+
+def generar_nube_bigramas(df, columna_comentarios, columna_calificacion, calificacion, columna_nombre, nombre, num_frecuencias=10):
+    df_filtrado = df[(df[columna_calificacion] == calificacion) & (df[columna_nombre] == nombre)]
+    comentarios_limpios = df_filtrado[columna_comentarios].apply(clean_text).tolist()
+    
+    tokenized_comments = [comment.split() for comment in comentarios_limpios]
+    bigram = Phrases(tokenized_comments, min_count=5, threshold=100)
+    bigram_mod = Phraser(bigram)
+    
+    bigram_comments = [bigram_mod[comment] for comment in tokenized_comments]
+    bigramas = [' '.join(bigrama) for comentario in bigram_comments for bigrama in ngrams(comentario, 2)]
+    bigramas_freq = Counter(bigramas)
+    
+    wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis', collocations=False, max_words=30).generate_from_frequencies(bigramas_freq)
+    
+    fig1, ax1 = plt.subplots(figsize=(10, 5))
+    ax1.imshow(wordcloud, interpolation='bilinear')
+    ax1.axis('off')
+    
+    bigramas_comunes = bigramas_freq.most_common(num_frecuencias)
+    bigramas, frecuencias = zip(*bigramas_comunes)
+    
+    fig2, ax2 = plt.subplots(figsize=(12, 8))
+    ax2.barh(bigramas, frecuencias, color='skyblue')
+    ax2.set_xlabel('Frecuencia')
+    ax2.set_title(f'Top {num_frecuencias} Bigramas más Comunes para {nombre}')
+    ax2.invert_yaxis()
+    
+    return fig1, fig2

@@ -3,19 +3,20 @@ import plotly.graph_objects as go
 from shinywidgets import output_widget, render_widget
 from pathlib import Path
 import pandas as pd
-from src.functions import serie_tiempo_empresa, mapa_floresta
+from src.functions import serie_tiempo_empresa, mapa_floresta, generar_nube_bigramas
+import mpld3
 
 app_ui = ui.page_fluid(
     ui.include_css(
-        Path(__file__).parent / "styles.css"  
+        Path(__file__).parent / "styles.css"
     ),    
     ui.div(
         ui.h2("Análisis de Comentarios".upper()).add_class("panel-title")
     ),
     ui.div(
         ui.layout_column_wrap(
-            1/2,  
-            ui.input_selectize('categoria', 'CATEGORIAS', ['Total', 'Hoteles', 'Restaurantes', 'Bares'], width = '50%'),
+            1/2,
+            ui.input_selectize('categoria', 'CATEGORIAS', ['Total', 'Hoteles', 'Restaurantes', 'Bares'], width='50%'),
             ui.div(
                 ui.output_ui("nombre_empresa_ui", inline=True),
                 style="width: 100%;"
@@ -25,10 +26,20 @@ app_ui = ui.page_fluid(
         ui.layout_column_wrap(
             1 / 2,
             ui.card(
-                ui.output_ui("mapa_total")  
+                ui.output_ui("mapa_total")
             ),
             ui.card(
                 output_widget("plot_series_tiempo")
+            )
+        ),
+        ui.input_select('calificacion', 'CALIFICACIÓN', ['-1', '0', '1'], selected='-1'),
+        ui.layout_column_wrap(
+            1 / 2,
+            ui.card(
+                ui.output_ui("nube_palabras")
+            ),
+            ui.card(
+                ui.output_ui("grafico_frecuencias")
             )
         ),
     ).add_class("main-container"),
@@ -115,5 +126,23 @@ def server(input, output, session):
             return ui.input_checkbox("toggle", "Mostrar todos los locales.", value=True)
         else:
             return ui.div()
+        
+    @output
+    @render.ui
+    def nube_palabras():
+        df = get_dataframe()
+        nombre = input.nombre_empresa() if input.categoria() != 'Total' else 'Total'
+        calificacion = int(input.calificacion())
+        nube_fig, _ = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
+        return ui.HTML(mpld3.fig_to_html(nube_fig))
+
+    @output
+    @render.ui
+    def grafico_frecuencias():
+        df = get_dataframe()
+        nombre = input.nombre_empresa() if input.categoria() != 'Total' else 'Total'
+        calificacion = int(input.calificacion())
+        _, freq_fig = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
+        return ui.HTML(mpld3.fig_to_html(freq_fig))
 
 app = App(app_ui, server)
