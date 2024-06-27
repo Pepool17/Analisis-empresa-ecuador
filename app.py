@@ -32,7 +32,7 @@ app_ui = ui.page_fluid(
                 output_widget("plot_series_tiempo")
             )
         ),
-        ui.input_select('calificacion', 'CALIFICACIÓN', ['-1', '0', '1'], selected='-1'),
+        ui.input_select('calificacion', 'CALIFICACIÓN', ['Negativo', 'Neutro', 'Positivo'], selected='Negativo'),
         ui.layout_column_wrap(
             1 / 2,
             ui.card(
@@ -77,7 +77,7 @@ def server(input, output, session):
     def update_empresa_choices():
         if input.categoria() != 'Total':
             df = get_dataframe()
-            ui.update_selectize('nombre_empresa', choices=list(df['Nombre'].unique()))
+            ui.update_selectize('nombre_empresa', choices=['Total'] + list(df['Nombre'].unique()))
 
     @output
     @render.ui
@@ -132,17 +132,40 @@ def server(input, output, session):
     def nube_palabras():
         df = get_dataframe()
         nombre = input.nombre_empresa() if input.categoria() != 'Total' else 'Total'
-        calificacion = int(input.calificacion())
+        calificacion_map = {'Negativo': -1, 'Neutro': 0, 'Positivo': 1}
+        calificacion = calificacion_map[input.calificacion()]
         nube_fig, _ = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
-        return ui.HTML(mpld3.fig_to_html(nube_fig))
+        
+        if nube_fig is None:
+            return ui.HTML("""
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 200px;">
+                    <p style="font-size: 24px; font-weight: bold; text-align: center;">
+                        No hay suficientes comentarios para crear el gráfico.
+                    </p>
+                </div>
+            """)
+        else:
+            return ui.HTML(mpld3.fig_to_html(nube_fig))
 
     @output
     @render_widget
     def grafico_frecuencias():
         df = get_dataframe()
         nombre = input.nombre_empresa() if input.categoria() != 'Total' else 'Total'
-        calificacion = int(input.calificacion())
+        calificacion_map = {'Negativo': -1, 'Neutro': 0, 'Positivo': 1}
+        calificacion = calificacion_map[input.calificacion()]
         _, freq_fig = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
-        return freq_fig
+        
+        if freq_fig is None:
+            # Crear una figura vacía con un mensaje
+            fig = go.Figure()
+            fig.add_annotation(
+                text="No hay suficientes comentarios para crear el gráfico",
+                xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False
+            )
+            return fig
+        else:
+            return freq_fig
 
 app = App(app_ui, server)

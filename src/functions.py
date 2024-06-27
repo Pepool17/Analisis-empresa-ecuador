@@ -145,12 +145,18 @@ def clean_text(text):
 
 
 
-def generar_nube_bigramas(df, columna_comentarios, columna_calificacion, calificacion, columna_nombre, nombre, num_frecuencias=10):
-    # Filtrar el DataFrame por la calificación deseada y por el nombre de la empresa
-    df_filtrado = df[(df[columna_calificacion] == calificacion) & (df[columna_nombre] == nombre)]
+def generar_nube_bigramas(df, columna_comentarios, columna_calificacion, calificacion, columna_nombre, nombre='Total', num_frecuencias=10):
+    if nombre == 'Total':
+        df_filtrado = df[df[columna_calificacion] == calificacion]
+    else:
+        df_filtrado = df[(df[columna_calificacion] == calificacion) & (df[columna_nombre] == nombre)]
     
     # Limpiar el texto
     comentarios_limpios = df_filtrado[columna_comentarios].apply(clean_text).tolist()
+    
+    # Verificar si hay suficientes palabras
+    if not ' '.join(comentarios_limpios).split():
+        return None, None
     
     # Tokenización de los comentarios
     tokenized_comments = [comment.split() for comment in comentarios_limpios]
@@ -197,5 +203,7 @@ def generar_nube_bigramas(df, columna_comentarios, columna_calificacion, calific
         height=500,  # Ajusta esta altura según tus necesidades
         margin=dict(l=10, r=10, t=40, b=10)  # Ajusta los márgenes según tus necesidades
     )
+    
+    plt.close(nube_fig)
     
     return nube_fig, freq_fig
