@@ -39,7 +39,7 @@ app_ui = ui.page_fluid(
                 ui.output_ui("nube_palabras")
             ),
             ui.card(
-                ui.output_ui("grafico_frecuencias")
+                output_widget("grafico_frecuencias")
             )
         ),
     ).add_class("main-container"),
@@ -137,12 +137,12 @@ def server(input, output, session):
         return ui.HTML(mpld3.fig_to_html(nube_fig))
 
     @output
-    @render.ui
+    @render_widget
     def grafico_frecuencias():
         df = get_dataframe()
         nombre = input.nombre_empresa() if input.categoria() != 'Total' else 'Total'
         calificacion = int(input.calificacion())
         _, freq_fig = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
-        return ui.HTML(mpld3.fig_to_html(freq_fig))
+        return freq_fig
 
 app = App(app_ui, server)

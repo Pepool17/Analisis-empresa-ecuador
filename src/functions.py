@@ -146,30 +146,56 @@ def clean_text(text):
 
 
 def generar_nube_bigramas(df, columna_comentarios, columna_calificacion, calificacion, columna_nombre, nombre, num_frecuencias=10):
+    # Filtrar el DataFrame por la calificación deseada y por el nombre de la empresa
     df_filtrado = df[(df[columna_calificacion] == calificacion) & (df[columna_nombre] == nombre)]
+    
+    # Limpiar el texto
     comentarios_limpios = df_filtrado[columna_comentarios].apply(clean_text).tolist()
     
+    # Tokenización de los comentarios
     tokenized_comments = [comment.split() for comment in comentarios_limpios]
+    
+    # Entrenamiento del modelo de bigramas
     bigram = Phrases(tokenized_comments, min_count=5, threshold=100)
     bigram_mod = Phraser(bigram)
     
+    # Generación de bigramas
     bigram_comments = [bigram_mod[comment] for comment in tokenized_comments]
+    
+    # Unir los bigramas para contar las frecuencias
     bigramas = [' '.join(bigrama) for comentario in bigram_comments for bigrama in ngrams(comentario, 2)]
+    
+    # Contar frecuencia de bigramas
     bigramas_freq = Counter(bigramas)
     
+    # Generar la nube de palabras
     wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis', collocations=False, max_words=30).generate_from_frequencies(bigramas_freq)
     
-    fig1, ax1 = plt.subplots(figsize=(10, 5))
-    ax1.imshow(wordcloud, interpolation='bilinear')
-    ax1.axis('off')
+    # Crear la figura de la nube de palabras
+    nube_fig, ax = plt.subplots(figsize=(8, 5))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
     
+    # Ajustar los márgenes de la figura de la nube de palabras
+    nube_fig.tight_layout(pad=0.5)
+    
+    # Crear la figura del gráfico de barras usando Plotly
     bigramas_comunes = bigramas_freq.most_common(num_frecuencias)
     bigramas, frecuencias = zip(*bigramas_comunes)
     
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    ax2.barh(bigramas, frecuencias, color='skyblue')
-    ax2.set_xlabel('Frecuencia')
-    ax2.set_title(f'Top {num_frecuencias} Bigramas más Comunes para {nombre}')
-    ax2.invert_yaxis()
+    freq_fig = go.Figure(go.Bar(
+        x=frecuencias,
+        y=bigramas,
+        orientation='h',
+        marker_color='skyblue'
+    ))
     
-    return fig1, fig2
+    freq_fig.update_layout(
+        title=f'Top {num_frecuencias} Bigramas más Comunes para {nombre}',
+        xaxis_title='Frecuencia',
+        yaxis_title='Bigramas',
+        height=500,  # Ajusta esta altura según tus necesidades
+        margin=dict(l=10, r=10, t=40, b=10)  # Ajusta los márgenes según tus necesidades
+    )
+    
+    return nube_fig, freq_fig
