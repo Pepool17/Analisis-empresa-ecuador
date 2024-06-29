@@ -11,7 +11,7 @@ app_ui = ui.page_fluid(
         Path(__file__).parent / "styles.css"
     ),    
     ui.div(
-        ui.h2("Análisis de Comentarios".upper()).add_class("panel-title")
+        ui.h2("Explorando Experiencias de Clientes ".upper()).add_class("panel-title")
     ),
     ui.div(
         ui.layout_column_wrap(
@@ -42,6 +42,7 @@ app_ui = ui.page_fluid(
                 output_widget("grafico_frecuencias")
             )
         ),
+        ui.output_ui("grafico_html_card")
     ).add_class("main-container"),
     
     ui.div(
@@ -167,5 +168,73 @@ def server(input, output, session):
             return fig
         else:
             return freq_fig
+#######################################
+    texto_visible = reactive.Value(False)
+
+    @reactive.Effect
+    @reactive.event(input.toggle_text)
+    def toggle_texto():
+        texto_visible.set(not texto_visible.get())
+
+    @output
+    @render.ui
+    def texto_explicativo():
+        if texto_visible.get():
+            return ui.HTML("""
+                <div>
+                    <h3>Explicación del Gráfico</h3>
+                    <p>Este gráfico muestra un análisis de los comentarios sobre bares, restaurantes y hoteles. El análisis se realizó para identificar los temas principales discutidos en estos establecimientos.</p>
+                    <h4>¿Qué muestra este gráfico?</h4>
+                    <ul>
+                        <li>Círculos: Cada círculo representa un tema identificado por el análisis.</li>
+                        <li>Tamaño del círculo: Cuanto más grande sea el círculo, más frecuentemente se menciona ese tema en los comentarios.</li>
+                        <li>Distancia entre círculos: La proximidad entre círculos indica la similitud entre los temas.</li>
+                        <li>Barra deslizante del lambda: Utiliza la barra deslizante para ajustar la relevancia de las palabras clave mostradas para cada tema.</li>
+                    </ul>
+                    <h4>¿Qué podemos aprender?</h4>
+                    <p>Este análisis nos ayuda a entender qué aspectos son más discutidos en los comentarios. Por ejemplo, si un círculo es grande y está cerca de otro, significa que esos temas están estrechamente relacionados en las opiniones de los clientes.</p>
+                    <p>Este gráfico nos ayuda a mejorar nuestros servicios y entender mejor lo que nuestros clientes valoran en nuestros establecimientos.</p>
+                    <h4>¿Qué es la barra deslizante del lambda?</h4>
+                    <ul>
+                        <li>Lambda: Es un parámetro que ajusta la relevancia de las palabras clave que se muestran para cada tema.</li>
+                        <li>Barra deslizante: Al mover la barra de lambda, puedes ajustar qué tan representativas son las palabras clave para cada tema identificado.</li>
+                        <li>Función: Un valor bajo de lambda muestra palabras más específicas y distintivas para cada tema. A medida que aumentas el valor de lambda, se destacan palabras más generales y comunes que aún están relacionadas con el tema.</li>
+                    </ul>
+                    <h4>¿Por qué es útil?</h4>
+                    <p>La barra de lambda te permite explorar cómo varían las palabras clave que definen cada tema, desde detalles específicos hasta aspectos más generales que son frecuentes en los comentarios de los clientes sobre los establecimientos analizados.</p>
+                </div>
+            """)
+        else:
+            return ui.div()
+        
+        
+    @output
+    @render.ui
+    def grafico_html():  
+        categoria = input.categoria().upper()
+        calificacion = input.calificacion().upper()
+
+        html_filename = f"LDA_{categoria}_{calificacion}.html"
+        html_path = Path(f'html/{html_filename}')
+
+        if html_path.exists():
+            with open(html_path, 'r', encoding='utf-8') as file:
+                html_content = file.read()
+            return ui.div(
+                ui.HTML(f"<div style='display: flex; justify-content: center;'>{html_content}</div>"),
+                ui.input_action_button("toggle_text", "Mostrar/Ocultar Interpretación del Gráfico de Análisis de Temas"),
+                ui.output_ui("texto_explicativo")
+            )
+        else:
+            return ui.HTML("<p>El gráfico no está disponible.</p>")
+        
+
+    @output
+    @render.ui
+    def grafico_html_card():
+        if input.categoria() == 'Total' or input.nombre_empresa() != 'Total':
+            return ui.div()
+        else:   
+            return ui.card(ui.output_ui("grafico_html"))
 
 app = App(app_ui, server)

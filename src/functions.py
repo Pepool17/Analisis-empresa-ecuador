@@ -130,6 +130,7 @@ def mapa_floresta(df, nombre, total):
     return mapa
 
 # Funciones para los bigramas
+nltk.download('stopwords')
 stop_words = stopwords.words('spanish')
 stop_words = stop_words + ['ademas', 'dijo', 'dijeron', 'comment', 'found', 'toda', 'veces', 'dieron', 'solo', 'tarde', 'noche']
 
