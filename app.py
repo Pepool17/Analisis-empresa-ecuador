@@ -9,13 +9,13 @@ import mpld3
 app_ui = ui.page_fluid(
     ui.include_css(
         Path(__file__).parent / "styles.css"
-    ),    
+    ),
     ui.div(
         ui.h2("Explorando Experiencias de Clientes ".upper()).add_class("panel-title")
     ),
     ui.div(
         ui.layout_column_wrap(
-            1/2,
+            1 / 2,
             ui.input_selectize('categoria', 'CATEGORIAS', ['Total', 'Hoteles', 'Restaurantes', 'Bares'], width='50%'),
             ui.div(
                 ui.output_ui("nombre_empresa_ui", inline=True),
@@ -30,8 +30,9 @@ app_ui = ui.page_fluid(
             ),
             ui.card(
                 output_widget("plot_series_tiempo")
-            )
+            ),
         ),
+        ui.output_ui("caracteristicas_ui_card"),
         ui.input_select('calificacion', 'CALIFICACIÓN', ['Negativo', 'Neutro', 'Positivo'], selected='Negativo'),
         ui.layout_column_wrap(
             1 / 2,
@@ -44,7 +45,6 @@ app_ui = ui.page_fluid(
         ),
         ui.output_ui("grafico_html_card")
     ).add_class("main-container"),
-    
     ui.div(
         ui.div(
             ui.img(src="https://i.ibb.co/DDZwpbX/digital-mind-only-logo.png",
@@ -57,9 +57,9 @@ app_ui = ui.page_fluid(
         ),
         style="text-align: center; padding: 20px; background-color: #373739;"
     )
-)   
+)
 
-# Server 
+################## SERVER ####################
 def server(input, output, session):
 
     @reactive.Calc
@@ -72,6 +72,22 @@ def server(input, output, session):
             return pd.read_csv('data/comentarios_restaurante.csv')
         elif input.categoria() == 'Bares':
             return pd.read_csv('data/comentarios_bares.csv')
+
+    @reactive.Calc
+    def get_caracteristicas_bares():
+        if input.categoria() == 'Bares':
+            return pd.read_csv('data/caracteristicas_bares.csv')
+        return pd.DataFrame()
+    
+    @reactive.Calc 
+    def get_caracteristicas_restaurantes():
+        if input.categoria() == 'Restaurantes':
+            return pd.read_csv('data/caracteristicas_restaurantes.csv')
+        return pd.DataFrame()
+
+    @reactive.Calc
+    def show_caracteristicas_ui():
+        return input.categoria() in ['Bares', 'Restaurantes'] and input.nombre_empresa() != 'Total'
 
     @reactive.Effect
     @reactive.event(input.categoria)
@@ -119,7 +135,7 @@ def server(input, output, session):
             hovermode='x unified'
         )
         return fig
-    
+
     @output
     @render.ui
     def toggle_checkbox():
@@ -127,7 +143,7 @@ def server(input, output, session):
             return ui.input_checkbox("toggle", "Mostrar todos los locales.", value=True)
         else:
             return ui.div()
-        
+
     @output
     @render.ui
     def nube_palabras():
@@ -136,7 +152,7 @@ def server(input, output, session):
         calificacion_map = {'Negativo': -1, 'Neutro': 0, 'Positivo': 1}
         calificacion = calificacion_map[input.calificacion()]
         nube_fig, _ = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
-        
+
         if nube_fig is None:
             return ui.HTML("""
                 <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 200px;">
@@ -156,9 +172,8 @@ def server(input, output, session):
         calificacion_map = {'Negativo': -1, 'Neutro': 0, 'Positivo': 1}
         calificacion = calificacion_map[input.calificacion()]
         _, freq_fig = generar_nube_bigramas(df, 'Comentario', 'Calificación', calificacion, 'Nombre', nombre)
-        
+
         if freq_fig is None:
-            # Crear una figura vacía con un mensaje
             fig = go.Figure()
             fig.add_annotation(
                 text="No hay suficientes comentarios para crear el gráfico",
@@ -168,49 +183,10 @@ def server(input, output, session):
             return fig
         else:
             return freq_fig
-#######################################
-    texto_visible = reactive.Value(False)
-
-    @reactive.Effect
-    @reactive.event(input.toggle_text)
-    def toggle_texto():
-        texto_visible.set(not texto_visible.get())
 
     @output
     @render.ui
-    def texto_explicativo():
-        if texto_visible.get():
-            return ui.HTML("""
-                <div>
-                    <h3>Explicación del Gráfico</h3>
-                    <p>Este gráfico muestra un análisis de los comentarios sobre bares, restaurantes y hoteles. El análisis se realizó para identificar los temas principales discutidos en estos establecimientos.</p>
-                    <h4>¿Qué muestra este gráfico?</h4>
-                    <ul>
-                        <li>Círculos: Cada círculo representa un tema identificado por el análisis.</li>
-                        <li>Tamaño del círculo: Cuanto más grande sea el círculo, más frecuentemente se menciona ese tema en los comentarios.</li>
-                        <li>Distancia entre círculos: La proximidad entre círculos indica la similitud entre los temas.</li>
-                        <li>Barra deslizante del lambda: Utiliza la barra deslizante para ajustar la relevancia de las palabras clave mostradas para cada tema.</li>
-                    </ul>
-                    <h4>¿Qué podemos aprender?</h4>
-                    <p>Este análisis nos ayuda a entender qué aspectos son más discutidos en los comentarios. Por ejemplo, si un círculo es grande y está cerca de otro, significa que esos temas están estrechamente relacionados en las opiniones de los clientes.</p>
-                    <p>Este gráfico nos ayuda a mejorar nuestros servicios y entender mejor lo que nuestros clientes valoran en nuestros establecimientos.</p>
-                    <h4>¿Qué es la barra deslizante del lambda?</h4>
-                    <ul>
-                        <li>Lambda: Es un parámetro que ajusta la relevancia de las palabras clave que se muestran para cada tema.</li>
-                        <li>Barra deslizante: Al mover la barra de lambda, puedes ajustar qué tan representativas son las palabras clave para cada tema identificado.</li>
-                        <li>Función: Un valor bajo de lambda muestra palabras más específicas y distintivas para cada tema. A medida que aumentas el valor de lambda, se destacan palabras más generales y comunes que aún están relacionadas con el tema.</li>
-                    </ul>
-                    <h4>¿Por qué es útil?</h4>
-                    <p>La barra de lambda te permite explorar cómo varían las palabras clave que definen cada tema, desde detalles específicos hasta aspectos más generales que son frecuentes en los comentarios de los clientes sobre los establecimientos analizados.</p>
-                </div>
-            """)
-        else:
-            return ui.div()
-        
-        
-    @output
-    @render.ui
-    def grafico_html():  
+    def grafico_html():
         categoria = input.categoria().upper()
         calificacion = input.calificacion().upper()
 
@@ -227,14 +203,41 @@ def server(input, output, session):
             )
         else:
             return ui.HTML("<p>El gráfico no está disponible.</p>")
-        
 
     @output
     @render.ui
     def grafico_html_card():
         if input.categoria() == 'Total' or input.nombre_empresa() != 'Total':
             return ui.div()
-        else:   
+        else:
             return ui.card(ui.output_ui("grafico_html"))
+
+    @output
+    @render.ui
+    def caracteristicas_ui_card():
+        if show_caracteristicas_ui():
+            return ui.card(ui.output_ui("caracteristicas_ui"))
+        else:
+            return ui.div()
+    
+    @output
+    @render.ui
+    def caracteristicas_ui():
+        if input.categoria() == 'Bares' and input.nombre_empresa() != 'Total':
+            df = get_caracteristicas_bares()
+        elif input.categoria() == 'Restaurantes' and input.nombre_empresa() != 'Total':
+            df = get_caracteristicas_restaurantes()
+        else:
+            return ui.div()
+
+        if not df.empty:
+            data = df[df['Nombre'] == input.nombre_empresa()]
+            if not data.empty:
+                exclude_columns = ['Nombre', 'Latitud', 'Longitud']
+                info = data.drop(columns=exclude_columns).dropna(axis=1, how='all').iloc[0].to_dict()
+                info = {k: v for k, v in info.items() if pd.notna(v)}
+                info_list = ''.join([f"<li><strong>{k}:</strong> {v}</li>" for k, v in info.items()])
+                return ui.HTML(f"<ul>{info_list}</ul>")
+        return ui.div()
 
 app = App(app_ui, server)
